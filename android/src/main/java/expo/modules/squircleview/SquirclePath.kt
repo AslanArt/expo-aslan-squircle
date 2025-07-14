@@ -116,20 +116,50 @@ class SquirclePath(
         roundingAndSmoothingBudget: Float
     ): CurveProperties {
 
-        var p = (1 + cornerSmoothing) * cornerRadius
-        var cornerSmoothingVar = cornerSmoothing
+        // Support étendu pour corner smoothing jusqu'à 200% (2.0)
+        val maxSmoothingSupported = 2.0f
+        val clampedSmoothing = minOf(cornerSmoothing, maxSmoothingSupported)
+        
+        var p = (1 + clampedSmoothing) * cornerRadius
+        var cornerSmoothingVar = clampedSmoothing
 
         if (!preserveSmoothing) {
-            val maxCornerSmoothing = roundingAndSmoothingBudget / cornerRadius - 1
+            val maxCornerSmoothing = minOf(roundingAndSmoothingBudget / cornerRadius - 1, maxSmoothingSupported)
             cornerSmoothingVar = minOf(cornerSmoothingVar, maxCornerSmoothing)
             p = minOf(p, roundingAndSmoothingBudget)
         }
 
-        val arcMeasure = 90 * (1 - cornerSmoothingVar)
-        val arcSectionLength = sin(toRadians(arcMeasure / 2)) * cornerRadius * sqrt(2f)
-        val angleAlpha = (90 - arcMeasure) / 2
+        // Formule modifiée pour supporter des valeurs > 100%
+        // Pour 0-100%: comportement normal
+        // Pour 100-200%: curve extra-smooth avec transition progressive
+        val arcMeasure = if (cornerSmoothingVar <= 1.0f) {
+            90 * (1 - cornerSmoothingVar)
+        } else {
+            // Pour > 100%, on utilise une progression exponentielle pour un effet plus smooth
+            val extraSmoothing = cornerSmoothingVar - 1.0f
+            val baseArc = 90 * (1 - 1.0f) // 0 degrees pour 100%
+            // Progression vers des valeurs négatives contrôlées pour ultra-smooth
+            baseArc - (extraSmoothing * 45f) // Permet d'aller jusqu'à -45° pour 200%
+        }
+        
+        val arcSectionLength = if (arcMeasure > 0) {
+            sin(toRadians(arcMeasure / 2)) * cornerRadius * sqrt(2f)
+        } else {
+            // Pour les valeurs négatives, on utilise une formule spéciale
+            cornerRadius * sqrt(2f) * (1 + kotlin.math.abs(arcMeasure) / 90f)
+        }
+        
+        val angleAlpha = kotlin.math.abs(90 - arcMeasure) / 2
         val p3ToP4Distance = cornerRadius * tan(toRadians(angleAlpha / 2))
-        val angleBeta = 45 * cornerSmoothingVar
+        
+        // Support étendu pour angleBeta avec smooth exagéré pour > 100%
+        val angleBeta = if (cornerSmoothingVar <= 1.0f) {
+            45 * cornerSmoothingVar
+        } else {
+            // Pour > 100%, on augmente progressivement jusqu'à 90° pour un effet ultra-smooth
+            val extraSmoothing = cornerSmoothingVar - 1.0f
+            45f + (extraSmoothing * 45f) // Va de 45° à 90° entre 100% et 200%
+        }
         val c = p3ToP4Distance * cos(toRadians(angleBeta))
         val d = c * tan(toRadians(angleBeta))
         var b = (p - arcSectionLength - c - d) / 3

@@ -94,20 +94,50 @@ struct SquirclePath {
     
     
     static func calculateCurveProperties(cornerRadius: CGFloat, cornerSmoothing: CGFloat, preserveSmoothing: Bool, roundingAndSmoothingBudget: CGFloat) -> CurveProperties {
-        var p = (1 + cornerSmoothing) * cornerRadius
-        var cornerSmoothing = cornerSmoothing
+        // Support étendu pour corner smoothing jusqu'à 200% (2.0)
+        let maxSmoothingSupported: CGFloat = 2.0
+        let clampedSmoothing = min(cornerSmoothing, maxSmoothingSupported)
+        
+        var p = (1 + clampedSmoothing) * cornerRadius
+        var cornerSmoothing = clampedSmoothing
         
         if !preserveSmoothing {
-            let maxCornerSmoothing = roundingAndSmoothingBudget / cornerRadius - 1
+            let maxCornerSmoothing = min(roundingAndSmoothingBudget / cornerRadius - 1, maxSmoothingSupported)
             cornerSmoothing = min(cornerSmoothing, maxCornerSmoothing)
             p = min(p, roundingAndSmoothingBudget)
         }
         
-        let arcMeasure = 90 * (1 - cornerSmoothing)
-        let arcSectionLength = sin(toRadians(arcMeasure / 2)) * cornerRadius * sqrt(2)
-        let angleAlpha = (90 - arcMeasure) / 2
+        // Formule modifiée pour supporter des valeurs > 100%
+        let arcMeasure: CGFloat
+        if cornerSmoothing <= 1.0 {
+            arcMeasure = 90 * (1 - cornerSmoothing)
+        } else {
+            // Pour > 100%, progression vers ultra-smooth
+            let extraSmoothing = cornerSmoothing - 1.0
+            let baseArc: CGFloat = 90 * (1 - 1.0) // 0 degrees pour 100%
+            arcMeasure = baseArc - (extraSmoothing * 45) // Permet d'aller jusqu'à -45° pour 200%
+        }
+        
+        let arcSectionLength: CGFloat
+        if arcMeasure > 0 {
+            arcSectionLength = sin(toRadians(arcMeasure / 2)) * cornerRadius * sqrt(2)
+        } else {
+            // Pour les valeurs négatives, formule spéciale pour ultra-smooth
+            arcSectionLength = cornerRadius * sqrt(2) * (1 + abs(arcMeasure) / 90)
+        }
+        
+        let angleAlpha = abs(90 - arcMeasure) / 2
         let p3ToP4Distance = cornerRadius * tan(toRadians(angleAlpha / 2))
-        let angleBeta = 45 * cornerSmoothing
+        
+        // Support étendu pour angleBeta avec smooth exagéré pour > 100%
+        let angleBeta: CGFloat
+        if cornerSmoothing <= 1.0 {
+            angleBeta = 45 * cornerSmoothing
+        } else {
+            // Pour > 100%, progression jusqu'à 90° pour effet ultra-smooth
+            let extraSmoothing = cornerSmoothing - 1.0
+            angleBeta = 45 + (extraSmoothing * 45) // Va de 45° à 90° entre 100% et 200%
+        }
         let c = p3ToP4Distance * cos(toRadians(angleBeta))
         let d = c * tan(toRadians(angleBeta))
         var b = (p - arcSectionLength - c - d) / 3

@@ -7,12 +7,15 @@ import {
   processColor,
   ViewProps,
   DimensionValue,
+  Image,
 } from "react-native";
 
 import {
   SquircleButtonProps,
   SquircleViewProps,
   ExpoSquircleNativeViewProps,
+  GradientProps,
+  BackgroundImageProps,
 } from "./ExpoSquircleView.types";
 
 const NativeView: React.ComponentType<ExpoSquircleNativeViewProps> =
@@ -29,7 +32,96 @@ const ExpoSquircleViewNativeWrapper = (
     borderWidth,
     preserveSmoothing,
     enabledIOSAnimation,
+    backgroundImage,
+    backgroundGradient,
+    borderGradient,
   } = props;
+
+  // Convertir les propriétés d'image
+  const imageProps = React.useMemo(() => {
+    if (!backgroundImage) return {};
+
+    let imageSource: string | number | undefined;
+    
+    if (typeof backgroundImage.source === 'number') {
+      imageSource = backgroundImage.source;
+    } else if (backgroundImage.source && 'uri' in backgroundImage.source) {
+      imageSource = backgroundImage.source.uri;
+    }
+
+    return {
+      backgroundImageSource: imageSource,
+      backgroundImageResizeMode: backgroundImage.resizeMode || 'cover',
+      backgroundImagePosition: backgroundImage.position || 'center',
+      backgroundImageOpacity: backgroundImage.opacity ?? 1.0,
+    };
+  }, [backgroundImage]);
+
+  // Convertir les propriétés de gradient de fond
+  const backgroundGradientProps = React.useMemo(() => {
+    if (!backgroundGradient) return {};
+
+    const colors = Array.isArray(backgroundGradient.colors) 
+      ? backgroundGradient.colors.map(color => 
+          typeof color === 'string' || typeof color === 'number' 
+            ? processColor(color) 
+            : processColor(color.color)
+        ).filter(color => color !== null)
+      : [];
+
+    const locations = backgroundGradient.locations || 
+      (Array.isArray(backgroundGradient.colors) 
+        ? backgroundGradient.colors.map((color, index) => 
+            typeof color === 'object' && color.position !== undefined 
+              ? color.position 
+              : index / (backgroundGradient.colors.length - 1)
+          )
+        : undefined);
+
+    return {
+      backgroundGradientType: backgroundGradient.type,
+      backgroundGradientColors: JSON.stringify(colors),
+      backgroundGradientAngle: backgroundGradient.type === 'linear' ? backgroundGradient.angle || 0 : undefined,
+      backgroundGradientCenter: backgroundGradient.type === 'radial' 
+        ? JSON.stringify(backgroundGradient.center || [0.5, 0.5]) 
+        : undefined,
+      backgroundGradientRadius: backgroundGradient.type === 'radial' ? backgroundGradient.radius || 0.5 : undefined,
+      backgroundGradientLocations: locations ? JSON.stringify(locations) : undefined,
+    };
+  }, [backgroundGradient]);
+
+  // Convertir les propriétés de gradient de bordure
+  const borderGradientProps = React.useMemo(() => {
+    if (!borderGradient) return {};
+
+    const colors = Array.isArray(borderGradient.colors) 
+      ? borderGradient.colors.map(color => 
+          typeof color === 'string' || typeof color === 'number' 
+            ? processColor(color) 
+            : processColor(color.color)
+        ).filter(color => color !== null)
+      : [];
+
+    const locations = borderGradient.locations || 
+      (Array.isArray(borderGradient.colors) 
+        ? borderGradient.colors.map((color, index) => 
+            typeof color === 'object' && color.position !== undefined 
+              ? color.position 
+              : index / (borderGradient.colors.length - 1)
+          )
+        : undefined);
+
+    return {
+      borderGradientType: borderGradient.type,
+      borderGradientColors: JSON.stringify(colors),
+      borderGradientAngle: borderGradient.type === 'linear' ? borderGradient.angle || 0 : undefined,
+      borderGradientCenter: borderGradient.type === 'radial' 
+        ? JSON.stringify(borderGradient.center || [0.5, 0.5]) 
+        : undefined,
+      borderGradientRadius: borderGradient.type === 'radial' ? borderGradient.radius || 0.5 : undefined,
+      borderGradientLocations: locations ? JSON.stringify(locations) : undefined,
+    };
+  }, [borderGradient]);
 
   return (
     <NativeView
@@ -40,6 +132,9 @@ const ExpoSquircleViewNativeWrapper = (
       cornerSmoothing={cornerSmoothing}
       preserveSmoothing={preserveSmoothing}
       enabledIOSAnimation={enabledIOSAnimation}
+      {...imageProps}
+      {...backgroundGradientProps}
+      {...borderGradientProps}
       style={StyleSheet.absoluteFill}
     />
   );
