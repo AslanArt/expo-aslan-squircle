@@ -62,11 +62,14 @@ const ExpoSquircleViewNativeWrapper = (
     if (!backgroundGradient) return {};
 
     const colors = Array.isArray(backgroundGradient.colors) 
-      ? backgroundGradient.colors.map(color => 
-          typeof color === 'string' || typeof color === 'number' 
-            ? processColor(color) 
-            : processColor(color.color)
-        ).filter(color => color !== null)
+      ? backgroundGradient.colors.map(color => {
+          if (typeof color === 'string' || typeof color === 'number') {
+            return processColor(color);
+          } else if (color && typeof color === 'object' && 'color' in color) {
+            return processColor(color.color);
+          }
+          return processColor(color);
+        }).filter(color => color !== null)
       : [];
 
     const locations = backgroundGradient.locations || 
@@ -95,11 +98,14 @@ const ExpoSquircleViewNativeWrapper = (
     if (!borderGradient) return {};
 
     const colors = Array.isArray(borderGradient.colors) 
-      ? borderGradient.colors.map(color => 
-          typeof color === 'string' || typeof color === 'number' 
-            ? processColor(color) 
-            : processColor(color.color)
-        ).filter(color => color !== null)
+      ? borderGradient.colors.map(color => {
+          if (typeof color === 'string' || typeof color === 'number') {
+            return processColor(color);
+          } else if (color && typeof color === 'object' && 'color' in color) {
+            return processColor(color.color);
+          }
+          return processColor(color);
+        }).filter(color => color !== null)
       : [];
 
     const locations = borderGradient.locations || 
