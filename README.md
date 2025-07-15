@@ -91,8 +91,79 @@ then do `npx pod-install`
     <td>Default style prop for the component, like any other view</td>
     <td><code>undefined</code></td>
   </tr>
+  <tr>
+    <td><code>backgroundImageSource</code></td>
+    <td><code>ImageURISource | number</code></td>
+    <td>Source de l'image de fond. Accepte une image locale via <code>require()</code> ou un objet URI pour les images distantes (ex: <code>{ uri: 'https://...' }</code>).</td>
+    <td><code>undefined</code></td>
+  </tr>
+    <tr>
+    <td><code>backgroundImageOpacity</code></td>
+    <td><code>number</code></td>
+    <td>Opacité de l'image de fond, de <code>0</code> (transparent) à <code>1</code> (opaque).</td>
+    <td><code>1</code></td>
+  </tr>
+  <tr>
+    <td><code>backgroundImageResizeMode</code></td>
+    <td><code>'cover' | 'contain'</code></td>
+    <td>Définit comment redimensionner l'image. <code>cover</code> remplit toute la vue (peut être rognée), <code>contain</code> ajuste l'image pour qu'elle soit entièrement visible.</td>
+    <td><code>cover</code></td>
+  </tr>
 </table>
 
+### Usage avec des Images
+
+Vous pouvez utiliser `SquircleView` pour afficher des images locales (depuis les assets de votre projet) ou distantes (depuis une URL).
+
+#### Image Locale
+
+Pour afficher une image locale, utilisez la fonction `require()` et passez le résultat à la prop `backgroundImageSource`. Il est recommandé d'utiliser `Image.resolveAssetSource` de `react-native` pour assurer une compatibilité maximale.
+
+```tsx | pure
+import { SquircleView } from "expo-squircle-view";
+import { Image } from "react-native";
+
+// Résoudre la source de l'image locale
+const localImage = Image.resolveAssetSource(require('./assets/my-image.png'));
+
+export default function App() {
+  return (
+    <SquircleView
+      style={{
+        width: 250,
+        height: 250,
+        borderRadius: 80,
+      }}
+      backgroundImageSource={localImage}
+      backgroundImageOpacity={0.8}
+    />
+  );
+}
+```
+
+#### Image Distante (URL)
+
+Pour afficher une image depuis une URL, passez un objet avec une clé `uri` à la prop `backgroundImageSource`.
+
+```tsx | pure
+import { SquircleView } from "expo-squircle-view";
+
+const remoteImage = { uri: 'https://www.creative-engineer.com/assets/imgs//portfolio/zbrush/byakuya//extralarge/1.jpg' };
+
+export default function App() {
+  return (
+    <SquircleView
+      style={{
+        width: 250,
+        height: 250,
+        borderRadius: 80,
+      }}
+      backgroundImageSource={remoteImage}
+      backgroundImageResizeMode="contain"
+    />
+  );
+}
+```
 
 ### Basic Example 
 
