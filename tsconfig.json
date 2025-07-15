@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es2017",
-    "lib": ["es2017", "es2018", "es2019"],
+    "lib": [
+      "es2017",
+      "es2018",
+      "es2019"
+    ],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -18,18 +22,25 @@
     "outDir": "./build",
     "baseUrl": ".",
     "paths": {
-      "react": ["./node_modules/@types/react"],
-      "react-native": ["./node_modules/@types/react-native"]
+      "react": [
+        "./node_modules/@types/react"
+      ],
+      "react-native": [
+        "./node_modules/@types/react-native"
+      ]
     }
   },
-  "include": ["./src/**/*"],
+  "include": [
+    "./src/**/*"
+  ],
   "exclude": [
     "node_modules",
     "build",
     "example",
-    "**/__mocks__/*", 
+    "**/__mocks__/*",
     "**/__tests__/*",
     "**/*.test.*",
     "**/*.spec.*"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }

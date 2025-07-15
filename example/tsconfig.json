@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -15,12 +19,17 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "expo-squircle-view": ["../src/index"],
-      "expo-squircle-view/*": ["../src/*"]
+      "expo-squircle-view": [
+        "../src/index"
+      ],
+      "expo-squircle-view/*": [
+        "../src/*"
+      ]
     }
   },
   "include": [
     "src",
     "App.tsx"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }
